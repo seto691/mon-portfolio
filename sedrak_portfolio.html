@@ -1,0 +1,1357 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sedrak ALEKSANYAN · Admin Sys & Réseaux</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+:root {
+  --bg: #080c12;
+  --bg2: #0d1320;
+  --bg3: #111926;
+  --bg4: #162030;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(0,220,180,0.2);
+  --accent: #00dcb4;
+  --accent2: #00aaff;
+  --accent3: #7c6aff;
+  --text: #e4edf8;
+  --text2: #8fa8c4;
+  --text3: #4d6a88;
+  --mono: 'JetBrains Mono', monospace;
+  --display: 'Syne', sans-serif;
+  --body: 'DM Sans', sans-serif;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--body);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 2px; }
+
+/* Grain overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 999;
+  opacity: 0.4;
+}
+
+/* ── Animations ── */
+@keyframes slideIn { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+@keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+@keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0;} }
+@keyframes float {
+  0%,100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+@keyframes barFill { from { width:0; } to { width: var(--w); } }
+@keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(0,220,180,0.3);} 70%{box-shadow:0 0 0 8px rgba(0,220,180,0);} }
+@keyframes glitch {
+  0%,100% { clip-path: inset(0 0 100% 0); }
+  20% { clip-path: inset(15% 0 75% 0); transform: translate(-2px, 0); }
+  40% { clip-path: inset(50% 0 40% 0); transform: translate(2px, 0); }
+  60% { clip-path: inset(75% 0 15% 0); transform: translate(-1px, 0); }
+  80% { clip-path: inset(90% 0 5% 0); transform: translate(0, 0); }
+}
+
+/* ── NAV ── */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 48px;
+  height: 64px;
+  background: rgba(8,12,18,0.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-logo {
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  color: var(--accent);
+  letter-spacing: 0.08em;
+  font-weight: 500;
+  text-decoration: none;
+}
+.nav-logo span { color: var(--text3); }
+.nav-links { display:flex; gap:32px; list-style:none; }
+.nav-links a {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--text2);
+  text-decoration: none;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: color 0.2s;
+  position: relative;
+}
+.nav-links a::before {
+  content: attr(data-num);
+  font-size: 0.6rem;
+  color: var(--accent);
+  margin-right: 6px;
+  opacity: 0.7;
+}
+.nav-links a:hover { color: var(--accent); }
+.nav-badge {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  color: var(--accent);
+  border: 1px solid rgba(0,220,180,0.3);
+  padding: 5px 14px;
+  border-radius: 3px;
+  letter-spacing: 0.08em;
+  background: rgba(0,220,180,0.05);
+}
+.nav-badge::before { content: '● '; font-size: 0.5rem; animation: blink 2s infinite; }
+
+/* ── HERO ── */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  padding: 120px 48px 80px;
+  position: relative;
+  overflow: hidden;
+}
+.hero-grid-bg {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0,220,180,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,220,180,0.03) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
+}
+.hero-glow {
+  position: absolute;
+  top: 20%;
+  right: 5%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(0,170,255,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hero-glow2 {
+  position: absolute;
+  bottom: 10%;
+  left: 10%;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(124,106,255,0.05) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hero-content { position:relative; z-index:1; max-width: 900px; }
+.hero-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--accent);
+  border: 1px solid rgba(0,220,180,0.25);
+  padding: 7px 18px;
+  border-radius: 3px;
+  margin-bottom: 36px;
+  background: rgba(0,220,180,0.04);
+  letter-spacing: 0.12em;
+  animation: slideIn 0.6s ease both;
+}
+.hero-tag::before {
+  content: '';
+  width: 6px; height: 6px;
+  background: var(--accent);
+  border-radius: 50%;
+  animation: blink 2s infinite;
+  flex-shrink: 0;
+}
+.hero-pre {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--text3);
+  margin-bottom: 12px;
+  letter-spacing: 0.15em;
+  animation: slideIn 0.6s ease 0.1s both;
+}
+.hero-pre span { color: var(--accent); }
+.hero h1 {
+  font-family: var(--display);
+  font-size: clamp(3rem, 6vw, 5.5rem);
+  font-weight: 800;
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+  margin-bottom: 8px;
+  animation: slideIn 0.6s ease 0.15s both;
+  color: #fff;
+}
+.hero h1 em {
+  font-style: normal;
+  color: transparent;
+  -webkit-text-stroke: 1.5px rgba(255,255,255,0.3);
+  display: block;
+}
+.hero-sub {
+  font-family: var(--body);
+  font-size: 1.1rem;
+  color: var(--text2);
+  font-weight: 300;
+  margin: 28px 0 48px;
+  max-width: 500px;
+  line-height: 1.7;
+  animation: slideIn 0.6s ease 0.2s both;
+}
+.hero-sub strong {
+  color: var(--accent);
+  font-weight: 500;
+}
+.hero-stats {
+  display: flex;
+  gap: 0;
+  margin-bottom: 48px;
+  animation: slideIn 0.6s ease 0.25s both;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  width: fit-content;
+}
+.stat-item {
+  padding: 20px 36px;
+  border-right: 1px solid var(--border);
+  position: relative;
+}
+.stat-item:last-child { border-right: none; }
+.stat-num {
+  font-family: var(--display);
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1;
+  display: block;
+}
+.stat-num span { color: var(--accent); font-size: 1.4rem; }
+.stat-lbl {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  margin-top: 4px;
+  display: block;
+}
+.hero-cta {
+  display: flex;
+  gap: 16px;
+  animation: slideIn 0.6s ease 0.3s both;
+}
+.btn-primary {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  background: var(--accent);
+  color: var(--bg);
+  border: none;
+  padding: 14px 32px;
+  border-radius: 3px;
+  text-decoration: none;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+  transition: all 0.2s;
+  cursor: pointer;
+  display: inline-block;
+}
+.btn-primary:hover { background: #00f5c8; transform: translateY(-1px); }
+.btn-outline {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  background: transparent;
+  color: var(--text2);
+  border: 1px solid var(--border);
+  padding: 14px 32px;
+  border-radius: 3px;
+  text-decoration: none;
+  letter-spacing: 0.1em;
+  transition: all 0.2s;
+  cursor: pointer;
+  display: inline-block;
+}
+.btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Hero scroll indicator */
+.scroll-hint {
+  position: absolute;
+  bottom: 36px;
+  left: 48px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  color: var(--text3);
+  letter-spacing: 0.12em;
+  animation: fadeIn 1s ease 1s both;
+}
+.scroll-line {
+  width: 40px;
+  height: 1px;
+  background: linear-gradient(90deg, var(--accent), transparent);
+}
+
+/* ── LAYOUT ── */
+main { padding-top: 0; }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 48px; }
+section { padding: 100px 0; position: relative; }
+section + section { border-top: 1px solid var(--border); }
+
+/* Section label */
+.sec-label {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  color: var(--accent);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.sec-label::after {
+  content: '';
+  flex: 1;
+  max-width: 60px;
+  height: 1px;
+  background: rgba(0,220,180,0.3);
+}
+h2.sec-title {
+  font-family: var(--display);
+  font-size: clamp(1.8rem, 3vw, 2.8rem);
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.02em;
+  margin-bottom: 48px;
+  line-height: 1.1;
+}
+h2.sec-title em {
+  font-style: normal;
+  color: var(--accent);
+}
+
+/* ── ABOUT ── */
+.about-grid {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 80px;
+  align-items: start;
+}
+.about-text p {
+  font-size: 1rem;
+  color: var(--text2);
+  font-weight: 300;
+  margin-bottom: 20px;
+  line-height: 1.8;
+}
+.about-text p strong { color: var(--accent); font-weight: 500; }
+.info-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.info-card-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  color: var(--text3);
+  letter-spacing: 0.12em;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.dot { width:8px; height:8px; border-radius:50%; }
+.dot-r { background:#ff5f57; }
+.dot-y { background:#ffbd2e; }
+.dot-g { background:#28c840; }
+.info-row {
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  font-size: 0.88rem;
+  transition: background 0.2s;
+}
+.info-row:last-child { border-bottom: none; }
+.info-row:hover { background: var(--bg3); }
+.info-row i {
+  color: var(--accent);
+  width: 18px;
+  font-size: 0.8rem;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+.info-row-label { color: var(--text3); font-family: var(--mono); font-size: 0.68rem; display: block; margin-bottom: 2px; }
+.info-row-val { color: var(--text); font-weight: 400; }
+
+/* ── SKILLS ── */
+.skills-two { display:grid; grid-template-columns:1fr 1fr; gap:64px; }
+.skill-bar-item { margin-bottom: 28px; }
+.skill-bar-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.skill-bar-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.88rem;
+  font-weight: 400;
+  color: var(--text);
+}
+.skill-bar-name i { color: var(--accent2); font-size: 0.85rem; width: 16px; }
+.skill-pct {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--accent);
+  letter-spacing: 0.05em;
+}
+.bar-track {
+  height: 3px;
+  background: var(--bg3);
+  border-radius: 2px;
+  overflow: visible;
+  position: relative;
+}
+.bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--accent2), var(--accent));
+  width: 0;
+  transition: width 1.4s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+.bar-fill::after {
+  content: '';
+  position: absolute;
+  right: -1px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 7px; height: 7px;
+  background: var(--accent);
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(0,220,180,0.6);
+}
+/* DACS Competence bars */
+.dacs-comp-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px 48px;
+  margin-top: 16px;
+}
+.dacs-comp-item { margin-bottom: 4px; }
+.dacs-comp-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.dacs-comp-name {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--accent3);
+  letter-spacing: 0.06em;
+  font-weight: 500;
+}
+.dacs-comp-pct {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  color: var(--accent3);
+  opacity: 0.7;
+  letter-spacing: 0.05em;
+}
+.dacs-bar-track {
+  height: 4px;
+  background: rgba(124,106,255,0.12);
+  border-radius: 2px;
+  overflow: visible;
+  position: relative;
+}
+.dacs-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--accent3), rgba(124,106,255,0.6));
+  width: 0;
+  transition: width 1.4s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+.dacs-bar-fill::after {
+  content: '';
+  position: absolute;
+  right: -1px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 7px; height: 7px;
+  background: var(--accent3);
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(124,106,255,0.6);
+}
+
+/* Tags */
+.tags-block { margin-bottom: 36px; }
+.tags-block h3 {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--text3);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+.tags { display:flex; flex-wrap:wrap; gap:8px; }
+.tag {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--text2);
+  border: 1px solid var(--border);
+  padding: 5px 14px;
+  border-radius: 3px;
+  transition: all 0.2s;
+  cursor: default;
+  letter-spacing: 0.04em;
+}
+.tag:hover {
+  border-color: rgba(0,220,180,0.4);
+  color: var(--accent);
+  background: rgba(0,220,180,0.04);
+}
+
+/* Points forts */
+.strengths-grid {
+  display: grid;
+  grid-template-columns: repeat(4,1fr);
+  gap: 16px;
+  margin-top: 56px;
+}
+.strength-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 24px 20px;
+  transition: all 0.3s;
+}
+.strength-card:hover {
+  border-color: rgba(0,220,180,0.2);
+  transform: translateY(-3px);
+  background: var(--bg3);
+}
+.strength-icon {
+  width: 36px; height: 36px;
+  background: rgba(0,220,180,0.08);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+.strength-icon i { color: var(--accent); font-size: 0.9rem; }
+.strength-card h4 {
+  font-family: var(--display);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 6px;
+}
+.strength-card p { font-size: 0.8rem; color: var(--text3); line-height: 1.5; }
+
+/* BUT DACS badges */
+.dacs-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+.dacs-badge {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  color: var(--accent3);
+  border: 1px solid rgba(124,106,255,0.25);
+  padding: 6px 16px;
+  border-radius: 3px;
+  background: rgba(124,106,255,0.05);
+  cursor: help;
+  transition: all 0.2s;
+  letter-spacing: 0.04em;
+}
+.dacs-badge:hover {
+  border-color: rgba(124,106,255,0.5);
+  background: rgba(124,106,255,0.1);
+}
+
+/* ── PROJECTS ── */
+.semester-label {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  color: var(--text3);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin: 48px 0 20px;
+  padding-left: 20px;
+  border-left: 2px solid var(--border);
+}
+.semester-label:first-of-type { margin-top: 0; }
+.projects-list { display:flex; flex-direction:column; gap:2px; }
+.proj-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 24px 28px;
+  transition: all 0.25s;
+  position: relative;
+  overflow: hidden;
+}
+.proj-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 2px;
+  background: var(--accent);
+  transform: scaleY(0);
+  transform-origin: bottom;
+  transition: transform 0.3s ease;
+}
+.proj-card:hover {
+  border-color: rgba(255,255,255,0.1);
+  background: var(--bg3);
+}
+.proj-card:hover::before { transform: scaleY(1); }
+.proj-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 10px;
+}
+.proj-name {
+  font-family: var(--display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #fff;
+}
+.proj-desc {
+  font-size: 0.88rem;
+  color: var(--text2);
+  font-weight: 300;
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+.ac-tags { display:flex; flex-wrap:wrap; gap:6px; }
+.ac-tag {
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  color: var(--text3);
+  border: 1px solid var(--border);
+  padding: 3px 10px;
+  border-radius: 2px;
+  transition: all 0.2s;
+  cursor: help;
+  position: relative;
+  letter-spacing: 0.04em;
+}
+.ac-tag:hover {
+  color: var(--accent2);
+  border-color: rgba(0,170,255,0.3);
+  background: rgba(0,170,255,0.05);
+}
+
+/* ── EXPERIENCE ── */
+.exp-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 48px;
+}
+.exp-header {
+  padding: 32px 36px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+}
+.exp-title {
+  font-family: var(--display);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 6px;
+}
+.exp-subtitle {
+  font-size: 0.9rem;
+  color: var(--text3);
+  font-weight: 300;
+}
+.exp-status {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  color: var(--accent);
+  border: 1px solid rgba(0,220,180,0.3);
+  padding: 6px 14px;
+  border-radius: 3px;
+  white-space: nowrap;
+  background: rgba(0,220,180,0.04);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.exp-status::before {
+  content: '';
+  width: 5px; height: 5px;
+  background: var(--accent);
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+.missions-grid {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 0;
+}
+.mission-card {
+  padding: 28px 32px;
+  border-right: 1px solid var(--border);
+  transition: background 0.2s;
+  animation: float 5s ease-in-out infinite;
+}
+.mission-card:nth-child(2) { animation-delay: 0.8s; }
+.mission-card:nth-child(3) { animation-delay: 1.6s; border-right: none; }
+.mission-card:hover { background: var(--bg3); }
+.mission-icon {
+  width: 44px; height: 44px;
+  background: rgba(0,170,255,0.08);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+.mission-icon i { color: var(--accent2); font-size: 1.1rem; }
+.mission-name {
+  font-family: var(--display);
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 10px;
+}
+.mission-desc { font-size: 0.82rem; color: var(--text2); line-height: 1.7; font-weight: 300; margin-bottom: 16px; }
+.mission-tags { display:flex; flex-wrap:wrap; gap:6px; }
+.mission-tag {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  color: var(--accent2);
+  border: 1px solid rgba(0,170,255,0.2);
+  padding: 3px 10px;
+  border-radius: 2px;
+  background: rgba(0,170,255,0.04);
+}
+
+/* ── FOOTER ── */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 56px 48px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  align-items: center;
+}
+.footer-brand {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+.footer-sub { font-size: 0.8rem; color: var(--text3); font-weight: 300; }
+.footer-links {
+  display: flex;
+  gap: 20px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+.footer-link {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--text3);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: color 0.2s;
+  letter-spacing: 0.06em;
+}
+.footer-link i { font-size: 0.85rem; }
+.footer-link:hover { color: var(--accent); }
+.footer-copy {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  color: var(--text3);
+  grid-column: span 2;
+  text-align: center;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+  letter-spacing: 0.1em;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  nav { padding: 0 24px; }
+  .hero { padding: 100px 24px 60px; }
+  .container { padding: 0 24px; }
+  .about-grid { grid-template-columns: 1fr; gap: 40px; }
+  .skills-two { grid-template-columns: 1fr; gap: 40px; }
+  .strengths-grid { grid-template-columns: 1fr 1fr; }
+  .missions-grid { grid-template-columns: 1fr; }
+  .mission-card { border-right: none; border-bottom: 1px solid var(--border); }
+  .mission-card:last-child { border-bottom: none; }
+  footer { grid-template-columns: 1fr; }
+  .footer-links { justify-content: flex-start; }
+  .footer-copy { grid-column: 1; }
+  .hero-stats { flex-wrap: wrap; }
+  .nav-links { display: none; }
+}
+@media (max-width: 600px) {
+  .hero h1 { font-size: 2.6rem; }
+  .strengths-grid { grid-template-columns: 1fr; }
+  .exp-header { flex-direction: column; }
+  .hero-cta { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo"><span>~/</span>SEDRAK ALEKSANYAN</a>
+  <ul class="nav-links">
+    <li><a data-num="01">À propos</a></li>
+    <li><a href="#skills" data-num="02">Skills</a></li>
+    <li><a href="#projects" data-num="03">Projets</a></li>
+    <li><a href="#experience" data-num="04">Expérience</a></li>
+  </ul>
+  <div class="nav-badge">Alternance · En cours</div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-grid-bg"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-glow2"></div>
+  <div class="hero-content">
+    <div class="hero-tag">BUT DACS · IUT Lyon 1 · 2024–2027</div>
+    <div class="hero-pre">[ <span>Admin Sys · Réseaux · DevOps</span> ]</div>
+    <h1>Sedrak<br><em>ALEKSANYAN</em></h1>
+    <p class="hero-sub">
+      Passionné par l'infrastructure, la cybersécurité et l'automatisation.
+      En alternance chez <strong>PURFER Derichebourg</strong>
+    </p>
+    <div class="hero-stats">
+      <div class="stat-item">
+        <span class="stat-num">4</span>
+        <span class="stat-lbl">Semestres</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-num">14</span>
+        <span class="stat-lbl">SAÉ</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-num">40<span>+</span></span>
+        <span class="stat-lbl">AC validés</span>
+      </div>
+    </div>
+    <div class="hero-cta">
+      <a href="#experience" class="btn-primary">Voir l'expérience →</a>
+      <a href="#projects" class="btn-outline">Projets & SAÉ</a>
+    </div>
+  </div>
+  <div class="scroll-hint">
+    <div class="scroll-line"></div>
+    SCROLL
+  </div>
+</div>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="container">
+    <div class="sec-label">01</div>
+    <h2 class="sec-title"><em>À propos de moi</em></h2>
+    <div class="about-grid">
+      <div class="about-text">
+        <p>Passionné par l'administration système, la cybersécurité et les réseaux, je suis en 2ème année de BUT Informatique à l'IUT Lyon 1, parcours <strong>DACS</strong> — Déploiement d'Applications Communicantes et Sécurisées.</p>
+        <p>Je suis actuellement en alternance chez <strong>PURFER Derichebourg</strong> sur des missions de support technique critique&nbsp;: assistance sur migration AS400, déploiement NAC Cisco, et migration Windows 11. Cette expérience forge mes compétences techniques et ma gestion de crise en environnement industriel.</p>
+        <p>En dehors de l'informatique, le football m'a appris la rigueur et l'esprit d'équipe — <strong>10 ans au niveau régional</strong>, je continue à jouer à l'université. Cette dimension collective est complétée par ma pratique des échecs : pendant <strong>5 ans au niveau national</strong>, j'ai participé à plusieurs reprises aux championnats de France, une expérience exigeante qui a forgé ma vision stratégique, ma gestion de la pression et ma capacité d'analyse face à des problèmes complexes.</p>
+        <div style="margin-top:36px;">
+          <div class="sec-label" style="margin-bottom:16px;">Les 6 compétences BUT DACS</div> 
+          <div class="dacs-comp-grid">
+            <div class="dacs-comp-item">
+              <div class="dacs-comp-top">
+                <span class="dacs-comp-name">C1 · Réaliser</span>
+                <span class="dacs-comp-pct">72%</span>
+              </div>
+              <div class="dacs-bar-track"><div class="dacs-bar-fill" data-w="72"></div></div>
+            </div>
+            <div class="dacs-comp-item">
+              <div class="dacs-comp-top">
+                <span class="dacs-comp-name">C2 · Optimiser</span>
+                <span class="dacs-comp-pct">58%</span>
+              </div>
+              <div class="dacs-bar-track"><div class="dacs-bar-fill" data-w="58"></div></div>
+            </div>
+            <div class="dacs-comp-item">
+              <div class="dacs-comp-top">
+                <span class="dacs-comp-name">C3 · Administrer</span>
+                <span class="dacs-comp-pct">75%</span>
+              </div>
+              <div class="dacs-bar-track"><div class="dacs-bar-fill" data-w="75"></div></div>
+            </div>
+            <div class="dacs-comp-item">
+              <div class="dacs-comp-top">
+                <span class="dacs-comp-name">C4 · Gérer</span>
+                <span class="dacs-comp-pct">55%</span>
+              </div>
+              <div class="dacs-bar-track"><div class="dacs-bar-fill" data-w="55"></div></div>
+            </div>
+            <div class="dacs-comp-item">
+              <div class="dacs-comp-top">
+                <span class="dacs-comp-name">C5 · Conduire</span>
+                <span class="dacs-comp-pct">62%</span>
+              </div>
+              <div class="dacs-bar-track"><div class="dacs-bar-fill" data-w="62"></div></div>
+            </div>
+            <div class="dacs-comp-item">
+              <div class="dacs-comp-top">
+                <span class="dacs-comp-name">C6 · Collaborer</span>
+                <span class="dacs-comp-pct">68%</span>
+              </div>
+              <div class="dacs-bar-track"><div class="dacs-bar-fill" data-w="68"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="info-card">
+          <div class="info-card-header">
+            <span class="dot dot-r"></span>
+            <span class="dot dot-y"></span>
+            <span class="dot dot-g"></span>
+            <span style="margin-left:8px;">PROFIL</span>
+          </div>
+          <div class="info-row">
+            <i class="fas fa-graduation-cap"></i>
+            <div>
+              <span class="info-row-label">Formation</span>
+              <span class="info-row-val">BUT Informatique — Parcours DACS</span>
+            </div>
+          </div>
+          <div class="info-row">
+            <i class="fas fa-university"></i>
+            <div>
+              <span class="info-row-label">Établissement</span>
+              <span class="info-row-val">IUT Lyon 1 — Villeurbanne</span>
+            </div>
+          </div>
+          <div class="info-row">
+            <i class="fas fa-calendar-alt"></i>
+            <div>
+              <span class="info-row-label">Durée</span>
+              <span class="info-row-val">2024 → 2027 · En cours</span>
+            </div>
+          </div>
+          <div class="info-row">
+            <i class="fas fa-briefcase"></i>
+            <div>
+              <span class="info-row-label">Situation</span>
+              <span class="info-row-val">Alternance chez PURFER Derichebourg</span>
+            </div>
+          </div>
+          <div class="info-row">
+            <i class="fas fa-language"></i>
+            <div>
+              <span class="info-row-label">Langues</span>
+              <span class="info-row-val">Français · Anglais B2 · Arménien</span>
+            </div>
+          </div>
+          <div class="info-row">
+            <i class="fas fa-futbol"></i>
+            <div>
+              <span class="info-row-label">Sport</span>
+              <span class="info-row-val">Football — 10 ans niveau régional<br>Échecs - 5 ans niveau national</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SKILLS -->
+<section id="skills">
+  <div class="container">
+    <div class="sec-label">02 · Skills</div>
+    <h2 class="sec-title">Compétences <em>techniques</em></h2>
+    <div class="skills-two">
+      <!-- Skill list (sans jauges) -->
+      <div>
+        <div class="tags-block">
+          <h3>// Réseau & Infrastructure</h3>
+          <div class="tags">
+            <span class="tag"><i class="fas fa-network-wired" style="margin-right:6px;color:var(--accent2);font-size:0.7rem;"></i>TCP/IP · VLAN · DHCP · DNS</span>
+            <span class="tag"><i class="fab fa-linux" style="margin-right:6px;color:var(--accent2);font-size:0.7rem;"></i>Linux Administration</span>
+            <span class="tag"><i class="fab fa-windows" style="margin-right:6px;color:var(--accent2);font-size:0.7rem;"></i>Windows Server / AD</span>
+            <span class="tag"><i class="fas fa-cloud" style="margin-right:6px;color:var(--accent2);font-size:0.7rem;"></i>VMware</span>
+            <span class="tag"><i class="fas fa-shield-alt" style="margin-right:6px;color:var(--accent2);font-size:0.7rem;"></i>Cybersécurité · NAC</span>
+          </div>
+        </div>
+        <div class="tags-block">
+          <h3>// Dev & Automatisation</h3>
+          <div class="tags">
+            <span class="tag"><i class="fas fa-code" style="margin-right:6px;color:var(--accent2);font-size:0.7rem;"></i>Python · Bash</span>
+            <span class="tag"><i class="fab fa-docker" style="margin-right:6px;color:var(--accent2);font-size:0.7rem;"></i>Docker · CI/CD</span>
+            <span class="tag"><i class="fas fa-database" style="margin-right:6px;color:var(--accent2);font-size:0.7rem;"></i>Support technique</span>
+          </div>
+        </div>
+      </div>
+      <!-- Tags -->
+      <div>
+        <div class="tags-block">
+          <h3>// Systèmes</h3>
+          <div class="tags">
+            <span class="tag">Linux</span>
+			<span class="tag">Windows</span>
+            <span class="tag">Windows Server</span>
+            <span class="tag">VMware</span>
+          </div>
+        </div>
+        <div class="tags-block">
+          <h3>// Réseau & Sécu</h3>
+          <div class="tags">
+            <span class="tag">TCP/IP</span>
+            <span class="tag">VLAN</span>
+            <span class="tag">DHCP / DNS</span>
+            <span class="tag">Firewall</span>
+            <span class="tag">VPN</span>
+            <span class="tag">NAC</span>
+            <span class="tag">Cisco</span>
+          </div>
+        </div>
+        <div class="tags-block">
+          <h3>// Dev & DevOps</h3>
+          <div class="tags">
+            <span class="tag">Python</span>
+            <span class="tag">Bash</span>
+            <span class="tag">Java</span>
+            <span class="tag">C</span>
+            <span class="tag">SQL</span>
+            <span class="tag">Docker</span>
+            <span class="tag">Git</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Points forts -->
+    <div class="strengths-grid">
+      <div class="strength-card">
+        <div class="strength-icon"><i class="fas fa-comments"></i></div>
+        <h4>Communication</h4>
+        <p>Développée via la hotline et la gestion de crises industrielles</p>
+      </div>
+      <div class="strength-card">
+        <div class="strength-icon"><i class="fas fa-network-wired"></i></div>
+        <h4>Infrastructure</h4>
+        <p>NAC Cisco, AS400, switch 9200L, déploiement zéro coupure</p>
+      </div>
+      <div class="strength-card">
+        <div class="strength-icon"><i class="fas fa-bug"></i></div>
+        <h4>Résolution</h4>
+        <p>Diagnostic d'incidents critiques en environnement industriel</p>
+      </div>
+      <div class="strength-card">
+        <div class="strength-icon"><i class="fas fa-users"></i></div>
+        <h4>Esprit d'équipe</h4>
+        <p>Football régional, gestion de projet Agile, travail en alternance</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROJECTS -->
+<section id="projects">
+  <div class="container">
+    <div class="sec-label">03 · SAÉ</div>
+    <h2 class="sec-title">Projets & <em>SAÉ</em></h2>
+
+    <div class="semester-label">// Semestre 1</div>
+    <div class="projects-list">
+      <div class="proj-card">
+        <div class="proj-header">
+          <span class="proj-name">SAÉ BD — Modélisation</span>
+        </div>
+        <p class="proj-desc">Conception d'une base de données relationnelle (MCD/MLD/MPD), implémentation SQL complète.</p>
+        <div class="ac-tags">
+          <span class="ac-tag" title="AC14.01 · Appréhender les besoins du client">AC14.01</span>
+          <span class="ac-tag" title="AC11.01 · Implémenter">AC11.01</span>
+          <span class="ac-tag" title="AC11.02 · Élaborer">AC11.02</span>
+        </div>
+      </div>
+      <div class="proj-card">
+        <div class="proj-header">
+          <span class="proj-name">SAÉ Intro Système</span>
+        </div>
+        <p class="proj-desc">Configuration sécurisée de postes Windows et Linux en environnement réseau.</p>
+        <div class="ac-tags">
+          <span class="ac-tag" title="AC13.01 · Identifier les composants">AC13.01</span>
+          <span class="ac-tag" title="AC13.03 · Installer un OS">AC13.03</span>
+          <span class="ac-tag" title="AC13.04 · Configurer un poste en réseau">AC13.04</span>
+        </div>
+      </div>
+      <div class="proj-card">
+        <div class="proj-header">
+          <span class="proj-name">SAÉ Développement C</span>
+        </div>
+        <p class="proj-desc">Gestionnaire d'annuaire en C avec persistance CSV et gestion mémoire.</p>
+        <div class="ac-tags">
+          <span class="ac-tag" title="AC11.01 · Implémenter">AC11.01</span>
+          <span class="ac-tag" title="AC11.02 · Élaborer">AC11.02</span>
+          <span class="ac-tag" title="AC11.03 · Essais">AC11.03</span>
+        </div>
+      </div>
+      <div class="proj-card">
+        <div class="proj-header">
+          <span class="proj-name">SAÉ Web</span>
+        </div>
+        <p class="proj-desc">Application web front-end responsive — HTML, CSS, JavaScript.</p>
+        <div class="ac-tags">
+          <span class="ac-tag" title="AC11.01 · Implémenter">AC11.01</span>
+          <span class="ac-tag" title="AC11.04 · Interfaces">AC11.04</span>
+          <span class="ac-tag" title="AC12.01 · Analyser">AC12.01</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="semester-label">// Semestre 2</div>
+    <div class="projects-list">
+      <div class="proj-card">
+        <div class="proj-header">
+          <span class="proj-name">SAÉ Java — Fête des Lumières</span>
+        </div>
+        <p class="proj-desc">Optimisation de parcours par graphes, IHM Java, gestion Agile en équipe.</p>
+        <div class="ac-tags">
+          <span class="ac-tag" title="AC12.01 · Analyser">AC12.01</span>
+          <span class="ac-tag" title="AC12.02 · Comparer">AC12.02</span>
+          <span class="ac-tag" title="AC15.01 · Besoins client">AC15.01</span>
+        </div>
+      </div>
+      <div class="proj-card">
+        <div class="proj-header">
+          <span class="proj-name">SAÉ Réseau Collectif</span>
+        </div>
+        <p class="proj-desc">Déploiement d'infrastructure réseau complète — DHCP, DNS, routage, segmentation.</p>
+        <div class="ac-tags">
+          <span class="ac-tag" title="AC13.04 · Configuration réseau">AC13.04</span>
+          <span class="ac-tag" title="AC23.02 · Services avancés">AC23.02</span>
+          <span class="ac-tag" title="AC26.03 · Travail en équipe">AC26.03</span>
+        </div>
+      </div>
+      <div class="proj-card">
+        <div class="proj-header">
+          <span class="proj-name">SAÉ Gestion de Projet</span>
+        </div>
+        <p class="proj-desc">Conduite de projet Agile — cahier des charges, planification Gantt, suivi.</p>
+        <div class="ac-tags">
+          <span class="ac-tag" title="AC15.01 · Besoins">AC15.01</span>
+          <span class="ac-tag" title="AC15.02 · Outils">AC15.02</span>
+          <span class="ac-tag" title="AC25.04 · Suivi">AC25.04</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="semester-label">// Semestre 3</div>
+    <div class="projects-list">
+      <div class="proj-card">
+        <div class="proj-header">
+          <span class="proj-name">SAÉ Cybersécurité — MITM & Phishing</span>
+        </div>
+        <p class="proj-desc">Simulation d'attaques MITM sur Kali Linux, déploiement d'un serveur de phishing, audit des vulnérabilités réseau.</p>
+        <div class="ac-tags">
+          <span class="ac-tag" title="AC23.02 · Services avancés">AC23.02</span>
+          <span class="ac-tag" title="AC23.03 · Politique de sécurité">AC23.03</span>
+          <span class="ac-tag" title="AC25.03 · Faisabilité">AC25.03</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="semester-label">// Semestre 4</div>
+    <div class="projects-list">
+      <div class="proj-card">
+        <div class="proj-header">
+          <span class="proj-name">SAÉ Docker Compose — Orchestration multi-conteneurs</span>
+        </div>
+        <p class="proj-desc">Création d'un docker-compose.yml pour orchestrer une stack complète — app web, base de données, cache Redis et reverse proxy Nginx. Gestion des réseaux, volumes et variables d'environnement.</p>
+        <div class="ac-tags">
+          <span class="ac-tag" title="AC23.01 · Créer des processus de traitement automatisé">AC23.01</span>
+          <span class="ac-tag" title="AC12.01 · Analyser un problème avec méthode">AC12.01</span>
+          <span class="ac-tag" title="AC26.03 · Mobiliser les compétences interpersonnelles">AC26.03</span>
+        </div>
+      </div>
+      <div class="proj-card">
+        <div class="proj-header">
+          <span class="proj-name">SAÉ Docker Swarm — Cluster & haute disponibilité</span>
+        </div>
+        <p class="proj-desc">Déploiement d'un cluster Docker Swarm sur plusieurs nœuds — mode manager/worker, services répliqués, gestion des secrets, load balancing, tests de résilience.</p>
+        <div class="ac-tags">
+          <span class="ac-tag" title="AC23.02 · Configurer des services avancés">AC23.02</span>
+          <span class="ac-tag" title="AC13.04 · Configurer un poste en réseau">AC13.04</span>
+          <span class="ac-tag" title="AC25.04 · Définir une démarche de suivi">AC25.04</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- EXPERIENCE -->
+<section id="experience">
+  <div class="container">
+    <div class="sec-label">04 · Expérience</div>
+    <h2 class="sec-title"><em>Alternance</em></h2>
+
+    <div class="exp-card">
+      <div class="exp-header">
+        <div>
+          <div class="exp-title">PURFER Derichebourg</div>
+          <div class="exp-subtitle">Support technique · Alternance</div>
+        </div>
+        <div class="exp-status">En cours · 2024–2027</div>
+      </div>
+      <div class="missions-grid">
+        <div class="mission-card">
+          <div class="mission-icon"><i class="fas fa-database"></i></div>
+          <div class="mission-name">Support AS400</div>
+          <p class="mission-desc">Assistance sur la migration critique du cœur industriel. Analyse des accès réseaux, remontée technique structurée, communication de crise multi-équipes.</p>
+          <div class="mission-tags">
+            <span class="mission-tag">AS400</span>
+            <span class="mission-tag">Support</span>
+            <span class="mission-tag">Gestion de crise</span>
+          </div>
+        </div>
+        <div class="mission-card">
+          <div class="mission-icon"><i class="fas fa-network-wired"></i></div>
+          <div class="mission-name">Déploiement NAC</div>
+          <p class="mission-desc">Sécurisation de l'accès réseau avec switch Cisco 9200L. Branchement physique, assistance configuration distante, bascule sans coupure de service.</p>
+          <div class="mission-tags">
+            <span class="mission-tag">Cisco</span>
+            <span class="mission-tag">NAC</span>
+            <span class="mission-tag">Zéro coupure</span>
+          </div>
+        </div>
+        <div class="mission-card">
+          <div class="mission-icon"><i class="fab fa-windows"></i></div>
+          <div class="mission-name">Migration Windows 11</div>
+          <p class="mission-desc">Mise en conformité du parc informatique — préparation, installation, configuration, restauration des profils utilisateur et validation.</p>
+          <div class="mission-tags">
+            <span class="mission-tag">Windows 11</span>
+            <span class="mission-tag">Déploiement</span>
+            <span class="mission-tag">Support</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div>
+    <div class="footer-brand">sedrak.aleksanyan@etu.univ-lyon1.fr</div>
+    <div class="footer-sub">PURFER Derichebourg · BUT DACS · IUT Lyon 1</div>
+  </div>
+  <div class="footer-links">
+    <a href="mailto:sedrak.aleksanyan@etu.univ-lyon1.fr" class="footer-link">
+      <i class="fas fa-envelope"></i> 
+    </a>
+    <a href="https://urldefense.com/v3/__https://github.com/seto691__;!!Cg-MNnxmjtCM3g!CHEeNssDqK-HQr3cymuUj8oQRMJKZ8kkdt81L5wcCunttnTg6fHHgh5LN3MhrnnOUtJleNgd1ONrC0upHOuFnwOXvqbqPZUkpnUmupq7mcbk-WvV$" class="footer-link">
+      <i class="fab fa-github"></i> 
+    </a>
+  </div>
+  <div class="footer-copy">© 2026 Sedrak ALEKSANYAN — Tous droits réservés</div>
+</footer>
+
+<script>
+// Animate skill bars on scroll
+const bars = document.querySelectorAll('.bar-fill, .dacs-bar-fill');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting && !e.target.dataset.done) {
+      const w = e.target.dataset.w;
+      e.target.style.width = w + '%';
+      e.target.dataset.done = '1';
+    }
+  });
+}, { threshold: 0.3 });
+bars.forEach(b => observer.observe(b));
+
+// Reveal on scroll
+const reveals = document.querySelectorAll('.proj-card, .strength-card, .mission-card, .info-row, .skill-bar-item, .dacs-comp-item');
+const revObs = new IntersectionObserver(entries => {
+  entries.forEach((e, i) => {
+    if (e.isIntersecting) {
+      setTimeout(() => {
+        e.target.style.opacity = '1';
+        e.target.style.transform = 'translateY(0)';
+      }, 60 * (e.target.dataset.idx || 0));
+      revObs.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.1 });
+
+reveals.forEach((el, i) => {
+  el.style.opacity = '0';
+  el.style.transform = 'translateY(12px)';
+  el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+  el.dataset.idx = i % 8;
+  revObs.observe(el);
+});
+
+// Nav active state
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('.nav-links a');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(s => {
+    if (window.scrollY >= s.offsetTop - 120) current = s.id;
+  });
+  navLinks.forEach(a => {
+    a.style.color = a.getAttribute('href') === '#' + current ? 'var(--accent)' : '';
+  });
+});
+</script>
+</body>
+</html>
